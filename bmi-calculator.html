@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BMI-meter</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.31.0/fonts/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f5f4f0;
+      --surface:   #ffffff;
+      --surface2:  #f0efe9;
+      --border:    rgba(0,0,0,0.12);
+      --border2:   rgba(0,0,0,0.22);
+      --text:      #1a1a18;
+      --text2:     #5f5e5a;
+      --text3:     #888780;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:       #1c1c1a;
+        --surface:  #252523;
+        --surface2: #2e2e2b;
+        --border:   rgba(255,255,255,0.12);
+        --border2:  rgba(255,255,255,0.22);
+        --text:     #f0efe9;
+        --text2:    #b4b2a9;
+        --text3:    #888780;
+      }
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sub {
+      font-size: 14px;
+      color: var(--text2);
+      margin-bottom: 1.5rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--text2);
+      margin-bottom: 6px;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 9px 12px;
+      font-size: 15px;
+      font-family: var(--font);
+      color: var(--text);
+      background: var(--surface);
+      border: 0.5px solid var(--border2);
+      border-radius: var(--radius-md);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input:focus {
+      border-color: #378ADD;
+      box-shadow: 0 0 0 3px rgba(55,138,221,0.15);
+    }
+
+    .row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .calc-btn {
+      width: 100%;
+      padding: 11px 24px;
+      font-size: 15px;
+      font-weight: 500;
+      font-family: var(--font);
+      color: var(--bg);
+      background: var(--text);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: opacity 0.15s;
+    }
+
+    .calc-btn:hover { opacity: 0.82; }
+    .calc-btn:active { transform: scale(0.98); }
+
+    .result-card {
+      background: var(--surface2);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem 1.25rem 1.25rem;
+      margin-top: 1rem;
+      text-align: center;
+      display: none;
+    }
+
+    .result-icon { font-size: 68px; line-height: 1; margin-bottom: 0.5rem; }
+
+    .result-bmi {
+      font-size: 88px;
+      font-weight: 500;
+      line-height: 1;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .result-bmi-label {
+      font-size: 13px;
+      color: var(--text3);
+      margin-bottom: 1rem;
+    }
+
+    .bmi-bar-wrap { margin: 1rem 0 0.5rem; }
+
+    .bmi-bar {
+      height: 10px;
+      border-radius: 5px;
+      background: linear-gradient(to right, #85B7EB 0%, #97C459 28%, #EF9F27 58%, #E24B4A 100%);
+      position: relative;
+    }
+
+    .bmi-needle {
+      width: 3px;
+      height: 20px;
+      background: var(--text);
+      border-radius: 2px;
+      position: absolute;
+      top: -5px;
+      transform: translateX(-50%);
+      transition: left 0.6s cubic-bezier(.4,0,.2,1);
+    }
+
+    .bmi-bar-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 5px;
+    }
+
+    .cat-badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      margin: 0.75rem 0;
+    }
+
+    .result-text {
+      font-size: 15px;
+      color: var(--text);
+      line-height: 1.75;
+      margin-bottom: 1.25rem;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .share-btn {
+      font-size: 13px;
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      border: 0.5px solid var(--border2);
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      font-family: var(--font);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s;
+    }
+
+    .share-btn:hover { background: var(--surface); }
+    .share-btn:active { transform: scale(0.97); }
+
+    .feedback {
+      font-size: 13px;
+      color: #3B6D11;
+      margin-top: 10px;
+      min-height: 20px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .feedback { color: #97C459; }
+    }
+
+    @media (max-width: 400px) {
+      .result-bmi { font-size: 64px; }
+      .result-icon { font-size: 52px; }
+      .bmi-bar-labels { font-size: 10px; }
+    }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .btn-row, .calc-btn { display: none !important; }
+      .result-card { display: block !important; border: 1px solid #ccc; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1><i class="ti ti-scale" aria-hidden="true"></i> BMI-meter</h1>
+  <p class="sub">Voor mens, dier of voorwerp — de wiskunde is voor iedereen gelijk.</p>
+
+  <div class="card">
+    <label for="onderwerp">Wat wil je meten?</label>
+    <input type="text" id="onderwerp" placeholder="bijv. walvis, opa Henk, potlood, draak…" />
+  </div>
+
+  <div class="card">
+    <div class="row2">
+      <div>
+        <label for="gewicht">Gewicht (kg)</label>
+        <input type="number" id="gewicht" placeholder="bijv. 75" min="0.01" step="0.1" />
+      </div>
+      <div>
+        <label for="lengte">Lengte (m)</label>
+        <input type="number" id="lengte" placeholder="bijv. 1.75" min="0.01" step="0.01" />
+      </div>
+    </div>
+  </div>
+
+  <button class="calc-btn" onclick="bereken()">
+    Bereken BMI <i class="ti ti-arrow-right" aria-hidden="true"></i>
+  </button>
+
+  <div class="result-card" id="result-card">
+    <div class="result-icon" id="result-icon"></div>
+    <div class="result-bmi" id="result-bmi"></div>
+    <div class="result-bmi-label">BMI-score</div>
+
+    <div class="bmi-bar-wrap">
+      <div class="bmi-bar">
+        <div class="bmi-needle" id="needle"></div>
+      </div>
+      <div class="bmi-bar-labels">
+        <span>Ondergewicht</span>
+        <span>Normaal</span>
+        <span>Overgewicht</span>
+        <span>Obese</span>
+      </div>
+    </div>
+
+    <div><span class="cat-badge" id="cat-badge"></span></div>
+
+    <p class="result-text" id="result-text"></p>
+
+    <div class="btn-row">
+      <button class="share-btn" onclick="kopieerTekst()">
+        <i class="ti ti-copy" aria-hidden="true"></i> Kopieer uitslag
+      </button>
+      <button class="share-btn" onclick="deelWebShare()">
+        <i class="ti ti-share" aria-hidden="true"></i> Delen
+      </button>
+      <button class="share-btn" onclick="window.print()">
+        <i class="ti ti-file-download" aria-hidden="true"></i> Opslaan als PDF
+      </button>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+</div>
+
+<script>
+const grappig = [
+  {
+    bmi: [0, 16],
+    icoon: "🪶",
+    cat: "Ernstig ondergewicht",
+    kleur: "#378ADD",
+    tekst: (n, b) => `De BMI van de/het <strong>${n}</strong> is maar liefst <strong>${b}</strong>. Ter vergelijking: een confetti-slingerje heeft een hogere BMI. Iemand een broodje kaas aanbieden?`
+  },
+  {
+    bmi: [16, 18.5],
+    icoon: "🥢",
+    cat: "Ondergewicht",
+    kleur: "#185FA5",
+    tekst: (n, b) => `De BMI van de/het <strong>${n}</strong> is <strong>${b}</strong>. Dat is ongeveer het gewicht van een opgerolde IKEA-handleiding vergeleken met het meubel zelf. Misschien eens een stroopwafel erbij?`
+  },
+  {
+    bmi: [18.5, 25],
+    icoon: "🏅",
+    cat: "Normaal gewicht",
+    kleur: "#3B6D11",
+    tekst: (n, b) => `De BMI van de/het <strong>${n}</strong> is <strong>${b}</strong>. Precies in de groene zone — net als een goed gevulde HEMA-worst: niet te dun, niet te dik. Indrukwekkend!`
+  },
+  {
+    bmi: [25, 30],
+    icoon: "🍩",
+    cat: "Overgewicht",
+    kleur: "#854F0B",
+    tekst: (n, b) => `De BMI van de/het <strong>${n}</strong> is <strong>${b}</strong>. Iets boven het ideaal — vergelijkbaar met een rugzak die net ietsje te vol gepakt is voor een dagwandeling. Allemaal goed te relativeren!`
+  },
+  {
+    bmi: [30, 35],
+    icoon: "🛋️",
+    cat: "Obesitas klasse I",
+    kleur: "#993C1D",
+    tekst: (n, b) => `De BMI van de/het <strong>${n}</strong> is <strong>${b}</strong>. Een volgeladen IKEA-boekenkast heeft hier jaloers naar gekeken. Misschien wat vaker de trap nemen?`
+  },
+  {
+    bmi: [35, 40],
+    icoon: "🐘",
+    cat: "Obesitas klasse II",
+    kleur: "#A32D2D",
+    tekst: (n, b) => `De BMI van de/het <strong>${n}</strong> is een forse <strong>${b}</strong>. Een olifant vindt dit heel vertrouwd voelen. Gelukkig heeft een olifant ook een dikke huid!`
+  },
+  {
+    bmi: [40, 9999],
+    icoon: "🌍",
+    cat: "Obesitas klasse III",
+    kleur: "#791F1F",
+    tekst: (n, b) => `De BMI van de/het <strong>${n}</strong> is de astronomische waarde <strong>${b}</strong>. Een zwart gat zou zeggen: "Gezellig, eindelijk iemand op mijn niveau." Zeker even checken of de gegevens kloppen!`
+  }
+];
+
+function bereken() {
+  const naam = document.getElementById('onderwerp').value.trim() || 'het onderwerp';
+  const kg   = parseFloat(document.getElementById('gewicht').value);
+  const m    = parseFloat(document.getElementById('lengte').value);
+
+  if (!kg || !m || kg <= 0 || m <= 0) {
+    alert('Vul een geldig gewicht én een geldige lengte in!');
+    return;
+  }
+
+  const bmi      = kg / (m * m);
+  const bmiRound = bmi.toFixed(1);
+  const info     = grappig.find(g => bmi >= g.bmi[0] && bmi < g.bmi[1]) || grappig[grappig.length - 1];
+
+  document.getElementById('result-bmi').textContent    = bmiRound;
+  document.getElementById('result-icon').textContent   = info.icoon;
+  document.getElementById('result-text').innerHTML     = info.tekst(naam, bmiRound);
+
+  const badge = document.getElementById('cat-badge');
+  badge.textContent         = info.cat;
+  badge.style.background    = info.kleur + '22';
+  badge.style.color         = info.kleur;
+  badge.style.border        = '0.5px solid ' + info.kleur + '55';
+
+  const pct = Math.min(Math.max((bmi - 10) / (45 - 10) * 100, 2), 98);
+  document.getElementById('needle').style.left = pct + '%';
+
+  const card = document.getElementById('result-card');
+  card.style.display = 'block';
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  document.getElementById('feedback').textContent = '';
+
+  window._bmiData = { naam, kg, m, bmi: bmiRound, cat: info.cat, icoon: info.icoon };
+}
+
+function getDeelTekst() {
+  if (!window._bmiData) return '';
+  const d = window._bmiData;
+  return `${d.icoon} BMI van de/het ${d.naam}: ${d.bmi}\nCategorie: ${d.cat}\n(gewicht: ${d.kg} kg, lengte: ${d.m} m)`;
+}
+
+function kopieerTekst() {
+  const tekst = getDeelTekst();
+  if (!tekst) return;
+  navigator.clipboard.writeText(tekst)
+    .then(() => toonFeedback('✓ Uitslag gekopieerd naar klembord!'))
+    .catch(() => toonFeedback('Kopiëren mislukt — probeer handmatig.'));
+}
+
+function deelWebShare() {
+  const tekst = getDeelTekst();
+  if (!tekst) return;
+  if (navigator.share) {
+    navigator.share({ title: 'Mijn BMI-uitslag', text: tekst }).catch(() => {});
+  } else {
+    kopieerTekst();
+    toonFeedback('Delen niet beschikbaar — uitslag gekopieerd!');
+  }
+}
+
+function toonFeedback(msg) {
+  const el = document.getElementById('feedback');
+  el.textContent = msg;
+  setTimeout(() => el.textContent = '', 3500);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') bereken();
+});
+</script>
+</body>
+</html>
